@@ -6,29 +6,64 @@ import VideoPlayer from "@/components/video-player";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import AnimatedReveal from "@/components/animated-reveal";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Progress } from "@/components/ui/progress";
 
 export default function StoryPage() {
   const router = useRouter();
   const { storyPrompt, generatedStory, isGenerating, error, retryGeneration } =
     useStoryStore();
 
+  const [loadingStep, setLoadingStep] = useState(0);
+  const loadingMessages = [
+    "Warming up the story engine...",
+    "Generating Act 1 narrative...",
+    "Directing the first scene (Video 1)...",
+    "Generating Act 2 narrative...",
+    "Directing the second scene (Video 2)...",
+    "Generating Act 3 narrative...",
+    "Directing the final scene (Video 3)...",
+    "Finalizing the story...",
+  ];
+
   useEffect(() => {
-    // If there's no story prompt, redirect back to input
+    let interval: NodeJS.Timeout | null = null;
+    if (isGenerating) {
+      setLoadingStep(0);
+      interval = setInterval(() => {
+        setLoadingStep((prev) =>
+          prev < loadingMessages.length - 1 ? prev + 1 : prev
+        );
+      }, 2500);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isGenerating, loadingMessages.length]);
+
+  useEffect(() => {
     if (
+      !isGenerating &&
+      !generatedStory &&
+      !error &&
       !storyPrompt.title &&
       !storyPrompt.genre &&
       !storyPrompt.mainCharacter
     ) {
       router.push("/");
     }
-  }, [storyPrompt, router]);
+  }, [storyPrompt, router, isGenerating, generatedStory, error]);
 
   if (isGenerating) {
+    const progressValue = (loadingStep / (loadingMessages.length - 1)) * 100;
     return (
-      <div className="container mx-auto py-10 px-4 text-center">
+      <div className="container mx-auto py-10 px-4 text-center flex flex-col items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-        <p>Generating your story...</p>
+        <p className="mb-4 text-lg">{loadingMessages[loadingStep]}</p>
+        <Progress value={progressValue} className="w-full max-w-md mb-8" />
+        <p className="text-sm text-muted-foreground">
+          Generating your story... this may take a few minutes.
+        </p>
       </div>
     );
   }
@@ -96,6 +131,7 @@ export default function StoryPage() {
                     `Scene ${Math.floor(index / 3) + 1}`
                   }
                   description={segment.description?.split(":")[1]?.trim()}
+                  videoUrl={segment.videoUrl}
                 />
               )}
             </AnimatedReveal>

@@ -1,107 +1,73 @@
 import { create } from "zustand";
 import { generateStory } from "./actions";
 
-type StoryPrompt = {
-  title: string;
-  genre: string;
-  mainCharacter: string;
-  setting: string;
-  mood: string;
-  theme: string;
-};
+// Define the types directly in the store or import from actions
+// Assuming types are defined in actions.ts - if not, define here
+// type StoryPrompt = { ... };
+// type StorySegment = { ... };
 
-type StorySegment = {
-  type: "text" | "video";
-  content?: string;
-  description?: string;
-};
+// Better: Import types if they are exported from actions.ts
+import type { StoryPrompt, StorySegment } from "./actions";
 
-type StoryState = {
+interface StoryState {
   storyPrompt: StoryPrompt;
   generatedStory: StorySegment[] | null;
   isGenerating: boolean;
   error: string | null;
-  setTitle: (title: string) => void;
-  setGenre: (genre: string) => void;
-  setMainCharacter: (character: string) => void;
-  setSetting: (setting: string) => void;
-  setMood: (mood: string) => void;
-  setTheme: (theme: string) => void;
-  resetStoryPrompt: () => void;
-  generateAIStory: () => Promise<void>;
-  retryGeneration: () => Promise<void>;
-};
-
-const initialStoryPrompt: StoryPrompt = {
-  title: "",
-  genre: "",
-  mainCharacter: "",
-  setting: "",
-  mood: "",
-  theme: "",
-};
+  setStoryPrompt: (prompt: StoryPrompt) => void;
+  startGeneration: () => Promise<void>;
+  retryGeneration: () => Promise<void>; // Add retry function
+}
 
 export const useStoryStore = create<StoryState>((set, get) => ({
-  storyPrompt: initialStoryPrompt,
+  storyPrompt: {
+    title: "",
+    genre: "",
+    mainCharacter: "",
+    setting: "",
+    mood: "",
+    theme: "",
+  },
   generatedStory: null,
   isGenerating: false,
   error: null,
+  setStoryPrompt: (prompt) => set({ storyPrompt: prompt }),
 
-  setTitle: (title: string) =>
-    set((state) => ({
-      storyPrompt: { ...state.storyPrompt, title },
-    })),
+  startGeneration: async () => {
+    const prompt = get().storyPrompt;
+    if (!prompt.title) return; // Basic validation
 
-  setGenre: (genre: string) =>
-    set((state) => ({
-      storyPrompt: { ...state.storyPrompt, genre },
-    })),
-
-  setMainCharacter: (mainCharacter: string) =>
-    set((state) => ({
-      storyPrompt: { ...state.storyPrompt, mainCharacter },
-    })),
-
-  setSetting: (setting: string) =>
-    set((state) => ({
-      storyPrompt: { ...state.storyPrompt, setting },
-    })),
-
-  setMood: (mood: string) =>
-    set((state) => ({
-      storyPrompt: { ...state.storyPrompt, mood },
-    })),
-
-  setTheme: (theme: string) =>
-    set((state) => ({
-      storyPrompt: { ...state.storyPrompt, theme },
-    })),
-
-  resetStoryPrompt: () =>
-    set({
-      storyPrompt: initialStoryPrompt,
-      generatedStory: null,
-      error: null,
-    }),
-
-  generateAIStory: async () => {
-    const { storyPrompt } = get();
     set({ isGenerating: true, error: null, generatedStory: null });
-
     try {
-      const story = await generateStory(storyPrompt);
-      set({ generatedStory: story });
-    } catch (error) {
-      console.error("Story generation error:", error);
-      set({ error: "Failed to generate story. Please try again." });
-    } finally {
-      set({ isGenerating: false });
+      const story = await generateStory(prompt);
+      set({ generatedStory: story, isGenerating: false });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unknown error occurred";
+      set({ error: errorMessage, isGenerating: false });
+      console.error("Story generation failed in store:", err);
     }
   },
 
   retryGeneration: async () => {
-    const { generateAIStory } = get();
-    set({ error: null });
-    return generateAIStory();
+    const prompt = get().storyPrompt;
+    if (!prompt.title) {
+      set({
+        error: "Cannot retry without a valid prompt.",
+        isGenerating: false,
+      });
+      return;
+    }
+    // Re-trigger generation with the existing prompt
+    set({ isGenerating: true, error: null, generatedStory: null });
+    try {
+      const story = await generateStory(prompt);
+      set({ generatedStory: story, isGenerating: false });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "An unknown error occurred";
+      set({ error: errorMessage, isGenerating: false });
+      console.error("Story generation retry failed in store:", err);
+    }
   },
 }));

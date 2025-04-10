@@ -1,138 +1,242 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useStoryStore } from "@/lib/store"
-import { useRouter } from "next/navigation"
-import StoryPromptPreview from "./story-prompt-preview"
-import { Loader2 } from "lucide-react"
+"use client";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useStoryStore } from "@/lib/store";
+import { useRouter } from "next/navigation";
+import StoryPromptPreview from "./story-prompt-preview";
+import { Loader2 } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Textarea } from "@/components/ui/textarea";
+import AnimatedReveal from "./animated-reveal";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+const formSchema = z.object({
+  title: z.string().min(2, {
+    message: "Title must be at least 2 characters.",
+  }),
+  genre: z.string().min(2, {
+    message: "Genre must be at least 2 characters.",
+  }),
+  mainCharacter: z.string().min(2, {
+    message: "Main character must be at least 2 characters.",
+  }),
+  setting: z.string().min(2, {
+    message: "Setting must be at least 2 characters.",
+  }),
+  mood: z.string().min(2, {
+    message: "Mood must be at least 2 characters.",
+  }),
+  theme: z.string().min(2, {
+    message: "Theme must be at least 2 characters.",
+  }),
+});
 
 export default function StoryInputForm() {
-  const router = useRouter()
-  const {
-    storyPrompt,
-    setTitle,
-    setGenre,
-    setMainCharacter,
-    setSetting,
-    setMood,
-    setTheme,
-    generateAIStory,
-    isGenerating,
-    error,
-  } = useStoryStore()
+  const router = useRouter();
+  const { storyPrompt, setStoryPrompt, startGeneration, isGenerating, error } =
+    useStoryStore();
 
-  const handleGenerateStory = async () => {
-    await generateAIStory()
-    router.push("/story")
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: storyPrompt,
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log("Form submitted with values:", values);
+    setStoryPrompt(values);
+    await startGeneration();
+    router.push("/story");
   }
 
   return (
-    <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader>
-        <CardTitle>Create Your Story</CardTitle>
-        <CardDescription>Fill in the details below to generate a custom story with videos</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="title">Story Title</Label>
-          <Input
-            id="title"
-            placeholder="Enter a title for your story"
-            value={storyPrompt.title}
-            onChange={(e) => setTitle(e.target.value)}
+    <AnimatedReveal>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Title</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter a title for your story"
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setStoryPrompt({ ...storyPrompt, title: e.target.value });
+                    }}
+                  />
+                </FormControl>
+                <FormDescription>The main title of your story.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="genre">Genre</Label>
-          <Select value={storyPrompt.genre} onValueChange={setGenre}>
-            <SelectTrigger id="genre">
-              <SelectValue placeholder="Select a genre" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="fantasy">Fantasy</SelectItem>
-              <SelectItem value="sci-fi">Science Fiction</SelectItem>
-              <SelectItem value="mystery">Mystery</SelectItem>
-              <SelectItem value="romance">Romance</SelectItem>
-              <SelectItem value="adventure">Adventure</SelectItem>
-              <SelectItem value="horror">Horror</SelectItem>
-              <SelectItem value="comedy">Comedy</SelectItem>
-              <SelectItem value="drama">Drama</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <FormField
+              control={form.control}
+              name="genre"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Genre</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Fantasy, Sci-Fi, Romance"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setStoryPrompt({
+                          ...storyPrompt,
+                          genre: e.target.value,
+                        });
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="space-y-2">
-          <Label htmlFor="main-character">Main Character</Label>
-          <Input
-            id="main-character"
-            placeholder="Describe your main character"
-            value={storyPrompt.mainCharacter}
-            onChange={(e) => setMainCharacter(e.target.value)}
+            <FormField
+              control={form.control}
+              name="mainCharacter"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Main Character</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., A brave knight, a curious scientist"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setStoryPrompt({
+                          ...storyPrompt,
+                          mainCharacter: e.target.value,
+                        });
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <FormField
+              control={form.control}
+              name="setting"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Setting</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., A mystical forest, a futuristic city"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setStoryPrompt({
+                          ...storyPrompt,
+                          setting: e.target.value,
+                        });
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mood"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mood</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Mysterious, Joyful, Tense"
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        setStoryPrompt({
+                          ...storyPrompt,
+                          mood: e.target.value,
+                        });
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="theme"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Theme</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="e.g., Redemption, Love conquers all, The price of power"
+                    className="resize-none"
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      setStoryPrompt({ ...storyPrompt, theme: e.target.value });
+                    }}
+                  />
+                </FormControl>
+                <FormDescription>
+                  The underlying message or main idea of the story.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="setting">Setting</Label>
-          <Input
-            id="setting"
-            placeholder="Where does your story take place?"
-            value={storyPrompt.setting}
-            onChange={(e) => setSetting(e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="mood">Mood</Label>
-          <Select value={storyPrompt.mood} onValueChange={setMood}>
-            <SelectTrigger id="mood">
-              <SelectValue placeholder="Select a mood" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="happy">Happy</SelectItem>
-              <SelectItem value="sad">Sad</SelectItem>
-              <SelectItem value="mysterious">Mysterious</SelectItem>
-              <SelectItem value="tense">Tense</SelectItem>
-              <SelectItem value="peaceful">Peaceful</SelectItem>
-              <SelectItem value="chaotic">Chaotic</SelectItem>
-              <SelectItem value="romantic">Romantic</SelectItem>
-              <SelectItem value="nostalgic">Nostalgic</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="theme">Theme</Label>
-          <Input
-            id="theme"
-            placeholder="What's the central theme of your story?"
-            value={storyPrompt.theme}
-            onChange={(e) => setTheme(e.target.value)}
-          />
-        </div>
-
-        {error && <div className="text-red-500 text-sm p-2 bg-red-50 rounded-md">{error}</div>}
-
-        <StoryPromptPreview />
-      </CardContent>
-      <CardFooter className="flex gap-4">
-        <Button variant="outline" className="ml-auto">
-          Save Prompt
-        </Button>
-        <Button onClick={handleGenerateStory} disabled={isGenerating}>
-          {isGenerating ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            "Generate Story"
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
-  )
+          <Button type="submit" disabled={isGenerating}>
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              "Generate Story"
+            )}
+          </Button>
+        </form>
+      </Form>
+    </AnimatedReveal>
+  );
 }
