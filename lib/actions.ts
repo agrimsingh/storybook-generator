@@ -1,7 +1,6 @@
 "use server";
 
-import { generateText } from "ai";
-import { google } from "@ai-sdk/google";
+import OpenAI from "openai";
 
 type StoryPrompt = {
   title: string;
@@ -23,7 +22,7 @@ export async function generateStory(
 ): Promise<StorySegment[]> {
   const { title, genre, mainCharacter, setting, mood, theme } = prompt;
 
-  const aiPrompt = `You are a story generation AI. Generate a story based on the following parameters. Return ONLY a JSON array containing exactly three objects with 'content' fields. Do not include any markdown formatting, code blocks, or explanatory text.
+  const systemPrompt = `You are a story generation AI. Generate a story based on the following parameters. Return ONLY a JSON array containing exactly three objects with 'content' fields. Do not include any markdown formatting, code blocks, or explanatory text.
 
 Parameters:
 - Title: ${title || "Untitled Story"}
@@ -42,12 +41,21 @@ Example format (replace with actual story):
 [{"content":"Act 1 content..."},{"content":"Act 2 content..."},{"content":"Act 3 content..."}]`;
 
   try {
-    const { text } = await generateText({
-      model: google("gemini-2.0-flash"),
-      prompt: aiPrompt,
-      temperature: 0.7,
-      maxTokens: 1000,
+    const openai = new OpenAI({
+      apiKey: process.env.QWEN_API_KEY,
+      baseURL: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
     });
+
+    const completion = await openai.chat.completions.create({
+      model: "qwen-plus",
+      messages: [
+        { role: "system", content: "You are a story generation AI." },
+        { role: "user", content: systemPrompt },
+      ],
+    });
+
+    const text = completion.choices[0].message.content;
+    if (!text) throw new Error("No response from AI");
 
     // Clean up the response - remove any markdown or code block formatting
     const cleanedText = text
