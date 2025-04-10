@@ -53,7 +53,6 @@ export default function StoryPage() {
                 <VideoPlayer
                   title={segment.description?.split(":")[0] || `Scene ${Math.floor(index / 3) + 1}`}
                   description={segment.description?.split(":")[1]?.trim()}
-                  thumbnailUrl={segment.thumbnailUrl}
                 />
               )}
             </AnimatedReveal>

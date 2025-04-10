@@ -7,14 +7,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useStoryStore } from "@/lib/store"
 import { useRouter } from "next/navigation"
 import StoryPromptPreview from "./story-prompt-preview"
+import { Loader2 } from "lucide-react"
 
 export default function StoryInputForm() {
   const router = useRouter()
-  const { storyPrompt, setTitle, setGenre, setMainCharacter, setSetting, setMood, setTheme, generateMockStory } =
-    useStoryStore()
+  const {
+    storyPrompt,
+    setTitle,
+    setGenre,
+    setMainCharacter,
+    setSetting,
+    setMood,
+    setTheme,
+    generateAIStory,
+    isGenerating,
+    error,
+  } = useStoryStore()
 
-  const handleGenerateStory = () => {
-    generateMockStory()
+  const handleGenerateStory = async () => {
+    await generateAIStory()
     router.push("/story")
   }
 
@@ -103,13 +114,24 @@ export default function StoryInputForm() {
           />
         </div>
 
+        {error && <div className="text-red-500 text-sm p-2 bg-red-50 rounded-md">{error}</div>}
+
         <StoryPromptPreview />
       </CardContent>
       <CardFooter className="flex gap-4">
         <Button variant="outline" className="ml-auto">
           Save Prompt
         </Button>
-        <Button onClick={handleGenerateStory}>Generate Story</Button>
+        <Button onClick={handleGenerateStory} disabled={isGenerating}>
+          {isGenerating ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            "Generate Story"
+          )}
+        </Button>
       </CardFooter>
     </Card>
   )

@@ -5,22 +5,18 @@ import { Card, CardContent } from "@/components/ui/card"
 interface VideoPlayerProps {
   title: string
   description?: string
-  thumbnailUrl?: string
 }
 
-export default function VideoPlayer({ title, description, thumbnailUrl }: VideoPlayerProps) {
+export default function VideoPlayer({ title, description }: VideoPlayerProps) {
   return (
     <Card className="w-full overflow-hidden">
       <div className="relative aspect-video bg-muted cursor-pointer group">
-        {/* Thumbnail or placeholder */}
-        <div
-          className="w-full h-full bg-cover bg-center flex items-center justify-center"
-          style={{
-            backgroundImage: thumbnailUrl ? `url(${thumbnailUrl})` : "none",
-            backgroundColor: !thumbnailUrl ? "#1f2937" : undefined,
-          }}
-        >
-          {!thumbnailUrl && <div className="text-muted-foreground text-sm">Video thumbnail loading...</div>}
+        {/* Use a solid color background instead of trying to load an image */}
+        <div className="w-full h-full flex items-center justify-center bg-gray-800">
+          <div className="text-gray-400 text-sm flex flex-col items-center">
+            <span className="text-lg mb-2">[Video Placeholder]</span>
+            <span>{title}</span>
+          </div>
         </div>
 
         {/* Play button overlay */}

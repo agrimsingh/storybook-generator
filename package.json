@@ -62,7 +62,9 @@
     "immer": "latest",
     "use-sync-external-store": "latest",
     "framer-motion": "latest",
-    "zustand": "latest"
+    "zustand": "latest",
+    "ai": "latest",
+    "@ai-sdk/google": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",
