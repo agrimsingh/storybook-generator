@@ -1,15 +1,53 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { useStoryStore } from "@/lib/store"
-import { useRouter } from "next/navigation"
-import VideoPlayer from "@/components/video-player"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
-import AnimatedReveal from "@/components/animated-reveal"
+"use client";
+import { Button } from "@/components/ui/button";
+import { useStoryStore } from "@/lib/store";
+import { useRouter } from "next/navigation";
+import VideoPlayer from "@/components/video-player";
+import Link from "next/link";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import AnimatedReveal from "@/components/animated-reveal";
+import { useEffect } from "react";
 
 export default function StoryPage() {
-  const router = useRouter()
-  const { storyPrompt, generatedStory } = useStoryStore()
+  const router = useRouter();
+  const { storyPrompt, generatedStory, isGenerating, error, retryGeneration } =
+    useStoryStore();
+
+  useEffect(() => {
+    // If there's no story prompt, redirect back to input
+    if (
+      !storyPrompt.title &&
+      !storyPrompt.genre &&
+      !storyPrompt.mainCharacter
+    ) {
+      router.push("/");
+    }
+  }, [storyPrompt, router]);
+
+  if (isGenerating) {
+    return (
+      <div className="container mx-auto py-10 px-4 text-center">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+        <p>Generating your story...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-10 px-4 text-center">
+        <p className="text-red-500 mb-4">{error}</p>
+        <div className="space-x-4">
+          <Button onClick={() => retryGeneration()} className="mr-2">
+            Try Again
+          </Button>
+          <Button variant="outline" onClick={() => router.push("/")}>
+            Return to Story Creator
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!generatedStory) {
     return (
@@ -19,7 +57,7 @@ export default function StoryPage() {
           Return to Story Creator
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -27,7 +65,9 @@ export default function StoryPage() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 flex justify-between items-center">
           <AnimatedReveal>
-            <h1 className="text-3xl font-bold">{storyPrompt.title || "Your Generated Story"}</h1>
+            <h1 className="text-3xl font-bold">
+              {storyPrompt.title || "Your Generated Story"}
+            </h1>
           </AnimatedReveal>
           <AnimatedReveal delay={0.2} direction="left">
             <Link href="/" passHref>
@@ -51,7 +91,10 @@ export default function StoryPage() {
                 <p className="text-lg leading-relaxed">{segment.content}</p>
               ) : (
                 <VideoPlayer
-                  title={segment.description?.split(":")[0] || `Scene ${Math.floor(index / 3) + 1}`}
+                  title={
+                    segment.description?.split(":")[0] ||
+                    `Scene ${Math.floor(index / 3) + 1}`
+                  }
                   description={segment.description?.split(":")[1]?.trim()}
                 />
               )}
@@ -71,5 +114,5 @@ export default function StoryPage() {
         </div>
       </div>
     </main>
-  )
+  );
 }

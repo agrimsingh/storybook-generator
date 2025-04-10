@@ -1,35 +1,36 @@
-import { create } from "zustand"
-import { generateStory } from "./actions"
+import { create } from "zustand";
+import { generateStory } from "./actions";
 
 type StoryPrompt = {
-  title: string
-  genre: string
-  mainCharacter: string
-  setting: string
-  mood: string
-  theme: string
-}
+  title: string;
+  genre: string;
+  mainCharacter: string;
+  setting: string;
+  mood: string;
+  theme: string;
+};
 
 type StorySegment = {
-  type: "text" | "video"
-  content?: string
-  description?: string
-}
+  type: "text" | "video";
+  content?: string;
+  description?: string;
+};
 
 type StoryState = {
-  storyPrompt: StoryPrompt
-  generatedStory: StorySegment[] | null
-  isGenerating: boolean
-  error: string | null
-  setTitle: (title: string) => void
-  setGenre: (genre: string) => void
-  setMainCharacter: (character: string) => void
-  setSetting: (setting: string) => void
-  setMood: (mood: string) => void
-  setTheme: (theme: string) => void
-  resetStoryPrompt: () => void
-  generateAIStory: () => Promise<void>
-}
+  storyPrompt: StoryPrompt;
+  generatedStory: StorySegment[] | null;
+  isGenerating: boolean;
+  error: string | null;
+  setTitle: (title: string) => void;
+  setGenre: (genre: string) => void;
+  setMainCharacter: (character: string) => void;
+  setSetting: (setting: string) => void;
+  setMood: (mood: string) => void;
+  setTheme: (theme: string) => void;
+  resetStoryPrompt: () => void;
+  generateAIStory: () => Promise<void>;
+  retryGeneration: () => Promise<void>;
+};
 
 const initialStoryPrompt: StoryPrompt = {
   title: "",
@@ -38,7 +39,7 @@ const initialStoryPrompt: StoryPrompt = {
   setting: "",
   mood: "",
   theme: "",
-}
+};
 
 export const useStoryStore = create<StoryState>((set, get) => ({
   storyPrompt: initialStoryPrompt,
@@ -76,22 +77,31 @@ export const useStoryStore = create<StoryState>((set, get) => ({
       storyPrompt: { ...state.storyPrompt, theme },
     })),
 
-  resetStoryPrompt: () => set({ storyPrompt: initialStoryPrompt }),
+  resetStoryPrompt: () =>
+    set({
+      storyPrompt: initialStoryPrompt,
+      generatedStory: null,
+      error: null,
+    }),
 
   generateAIStory: async () => {
-    const { storyPrompt } = get()
-
-    set({ isGenerating: true, error: null })
+    const { storyPrompt } = get();
+    set({ isGenerating: true, error: null, generatedStory: null });
 
     try {
-      const story = await generateStory(storyPrompt)
-      set({ generatedStory: story, isGenerating: false })
+      const story = await generateStory(storyPrompt);
+      set({ generatedStory: story });
     } catch (error) {
-      console.error("Failed to generate story:", error)
-      set({
-        error: "Failed to generate story. Please try again.",
-        isGenerating: false,
-      })
+      console.error("Story generation error:", error);
+      set({ error: "Failed to generate story. Please try again." });
+    } finally {
+      set({ isGenerating: false });
     }
   },
-}))
+
+  retryGeneration: async () => {
+    const { generateAIStory } = get();
+    set({ error: null });
+    return generateAIStory();
+  },
+}));
