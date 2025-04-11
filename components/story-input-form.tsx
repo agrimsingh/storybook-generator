@@ -71,7 +71,9 @@ export default function StoryInputForm() {
     console.log("Form submitted with values:", values);
     setStoryPrompt(values);
     await startGeneration();
-    router.push("/story");
+    if (!error) {
+      router.push("/story");
+    }
   }
 
   return (

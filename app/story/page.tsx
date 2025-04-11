@@ -8,6 +8,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import AnimatedReveal from "@/components/animated-reveal";
 import { useEffect, useState } from "react";
 import { Progress } from "@/components/ui/progress";
+import NarratedText from "@/components/narrated-text";
 
 export default function StoryPage() {
   const router = useRouter();
@@ -123,7 +124,7 @@ export default function StoryPage() {
               className={segment.type === "text" ? "prose max-w-none" : ""}
             >
               {segment.type === "text" ? (
-                <p className="text-lg leading-relaxed">{segment.content}</p>
+                <NarratedText text={segment.content || ""} autoPlay />
               ) : (
                 <VideoPlayer
                   title={
