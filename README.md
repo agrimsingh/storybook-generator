@@ -72,8 +72,12 @@ StorySpinner is an innovative app that transforms simple story prompts into full
 ## 🎯 Alibaba Cloud Services Used
 
 - **Qwen LLM**: For story generation (via Qwen Plus model on Model Studio)
-- **OSS (Object Storage Service)**: For storing generated videos and audio
-- **ECS (Elastic Compute Service)**: For hosting the application
+- **Tongyi Wanxiang**: Creates thematic videos per act
+
+## 🔄 Possible extensions/improvements post-hackathon
+
+- 🗄️ **OSS (Object Storage Service)**: For storing generated videos and audio
+- 🖥️ **ECS (Elastic Compute Service)**: For hosting the application
 
 ## 👨‍💻 Team Members
 
@@ -84,7 +88,7 @@ StorySpinner is an innovative app that transforms simple story prompts into full
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Demo
+## 🎬 Demo
 
 https://www.youtube.com/watch?v=gfdnSiUX33Y
 
