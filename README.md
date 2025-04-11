@@ -2,8 +2,6 @@
 
 > Your ideas, spun into a living storybook—text, video, and voice, instantly.
 
-![StorySpinner Banner](public/placeholder-logo.png)
-
 ## 🏆 Alibaba Cloud Singapore Hackathon 2025 Submission
 
 StorySpinner is an innovative app that transforms simple story prompts into fully realized multimedia narratives, leveraging Alibaba Cloud's AI solutions for text, video, and voice generation.
