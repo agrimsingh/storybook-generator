@@ -6,12 +6,16 @@ interface VideoPlayerProps {
   title: string;
   description?: string;
   videoUrl?: string;
+  autoPlay?: boolean;
+  loop?: boolean;
 }
 
 export default function VideoPlayer({
   title,
   description,
   videoUrl,
+  autoPlay = true,
+  loop = true,
 }: VideoPlayerProps) {
   return (
     <Card className="w-full overflow-hidden">
@@ -22,6 +26,10 @@ export default function VideoPlayer({
             controls
             src={videoUrl}
             poster="/video-placeholder.png"
+            autoPlay={autoPlay}
+            loop={loop}
+            muted={autoPlay} // Browsers often require muted for autoplay
+            playsInline // Better mobile experience
           />
         ) : (
           <>

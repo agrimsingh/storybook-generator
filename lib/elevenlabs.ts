@@ -1,4 +1,4 @@
-const VOICE_ID = "UgBBYS2sOqTuMpoF3BR0"; // Default voice ID - you can change this
+const VOICE_ID = "L1aJrPa7pLJEyYlh3Ilq"; // Default voice ID - you can change this
 
 export async function generateSpeech(text: string): Promise<ArrayBuffer> {
   const response = await fetch(

@@ -1,15 +1,18 @@
 import type React from "react";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({ subsets: ["latin"] });
+const poppins = Poppins({ 
+  weight: ['400', '500', '600', '700'],
+  subsets: ["latin"] 
+});
 
 export const metadata: Metadata = {
-  title: "Storybook Generator",
-  description: "Generate custom stories with interspersed videos",
+  title: "StorySpinner",
+  description: "Your ideas, spun into a living storybook—text, art, and voice, instantly.",
   generator: "v0.dev",
 };
 
@@ -22,9 +25,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className={cn(inter.className, "min-h-screen")}
+        className={cn(poppins.className, "min-h-screen")}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <div className="relative flex min-h-screen flex-col">
             <div className="flex-1">{children}</div>
           </div>

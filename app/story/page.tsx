@@ -101,8 +101,9 @@ export default function StoryPage() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-6 flex justify-between items-center">
           <AnimatedReveal>
-            <h1 className="text-3xl font-bold">
-              {storyPrompt.title || "Your Generated Story"}
+            <h1 className="text-3xl font-bold relative inline-block">
+              <span className="relative z-10">{storyPrompt.title || "YOUR STORYSPINNER TALE"}</span>
+              <div className="absolute bottom-0 left-0 w-full h-2 bg-accent -z-0"></div>
             </h1>
           </AnimatedReveal>
           <AnimatedReveal delay={0.2} direction="left">
@@ -133,6 +134,8 @@ export default function StoryPage() {
                   }
                   description={segment.description?.split(":")[1]?.trim()}
                   videoUrl={segment.videoUrl}
+                  autoPlay={true}
+                  loop={true}
                 />
               )}
             </AnimatedReveal>

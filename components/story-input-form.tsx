@@ -85,7 +85,7 @@ export default function StoryInputForm() {
             name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Title</FormLabel>
+                <FormLabel className="text-lg font-bold">Title</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="Enter a title for your story"
@@ -94,9 +94,10 @@ export default function StoryInputForm() {
                       field.onChange(e);
                       setStoryPrompt({ ...storyPrompt, title: e.target.value });
                     }}
+                    className="rounded-none border-2 border-primary/80 h-12"
                   />
                 </FormControl>
-                <FormDescription>The main title of your story.</FormDescription>
+                <FormDescription className="text-secondary font-medium">The main title of your story.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -227,14 +228,18 @@ export default function StoryInputForm() {
             )}
           />
 
-          <Button type="submit" disabled={isGenerating}>
+          <Button 
+            type="submit" 
+            disabled={isGenerating}
+            className="rounded-none w-full md:w-auto bg-primary text-white hover:bg-primary/90 font-bold text-lg px-8 py-6 h-auto"
+          >
             {isGenerating ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Generating...
               </>
             ) : (
-              "Generate Story"
+              "GENERATE STORY"
             )}
           </Button>
         </form>

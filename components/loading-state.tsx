@@ -34,11 +34,21 @@ export default function LoadingState({ className = "" }: LoadingStateProps) {
     <div
       className={`text-center flex flex-col items-center justify-center ${className}`}
     >
-      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-      <p className="mb-4 text-lg">{loadingMessages[loadingStep]}</p>
-      <Progress value={progressValue} className="w-full max-w-md mb-8" />
+      <h2 className="text-2xl font-bold mb-6 relative inline-block">
+        <span className="relative z-10">SPINNING YOUR STORY</span>
+        <div className="absolute bottom-0 left-0 w-full h-2 bg-accent -z-0"></div>
+      </h2>
+      
+      <div className="flex items-center justify-center mb-8">
+        <div className="bg-primary h-10 w-10 rounded-none animate-spin-slow"></div>
+        <div className="bg-secondary h-10 w-10 rounded-none -ml-4 mt-4"></div>
+        <div className="bg-accent h-10 w-10 rounded-full -ml-4 -mt-4"></div>
+      </div>
+      
+      <p className="mb-4 text-lg font-medium">{loadingMessages[loadingStep]}</p>
+      <Progress value={progressValue} className="w-full max-w-md mb-8 h-2 rounded-none bg-muted/50 border border-secondary" />
       <p className="text-sm text-muted-foreground">
-        Generating your story... this may take a few minutes.
+        Your ideas are being spun into a living storybook—this may take a few minutes.
       </p>
     </div>
   );
