@@ -62,6 +62,22 @@ StorySpinner is an innovative app that transforms simple story prompts into full
    pnpm dev
    ```
 
+### Docker
+
+You can also run StorySpinner using Docker:
+
+1. Build the Docker image:
+   ```bash
+   docker build -t storyspinner .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -p 3000:3000 --env-file .env.local storyspinner
+   ```
+
+3. Access the application at http://localhost:3000
+
 ## 🧩 How It Works
 
 1. **Story Creation**: Users fill out a simple form with story parameters
