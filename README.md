@@ -37,7 +37,7 @@ StorySpinner is an innovative app that transforms simple story prompts into full
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/storyspinner.git
+   git clone https://github.com/agrimsingh/storyspinner.git
    cd storyspinner
    ```
 
