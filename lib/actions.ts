@@ -57,125 +57,141 @@ async function pollPrediction(
 }
 
 async function generateVideo(prompt: string, index: number): Promise<string> {
-  const REPLICATE_API_TOKEN = process.env.REPLICATE_API_TOKEN;
-  if (!REPLICATE_API_TOKEN) {
-    throw new Error("REPLICATE_API_TOKEN is not set");
+  const EAS_URL = process.env.EAS_URL;
+  const EAS_TOKEN = process.env.EAS_TOKEN;
+
+  // Define task status enum
+  enum TaskStatus {
+    PENDING = "pending",
+    PROCESSING = "processing",
+    COMPLETED = "completed",
+    FAILED = "failed",
   }
 
-  const apiUrl =
-    "https://api.replicate.com/v1/models/wavespeedai/wan-2.1-t2v-480p/predictions";
+  // Define interfaces for API responses
+  interface GenerateResponse {
+    task_id: string;
+  }
 
-  const payload = {
-    input: {
-      prompt,
-    },
-  };
+  interface StatusResponse {
+    status: TaskStatus;
+    error?: string;
+  }
 
   try {
     console.log(
-      `Submitting prediction for video ${index} with prompt: ${prompt.substring(
+      `Submitting video generation for video ${index} with prompt: ${prompt.substring(
         0,
         100
       )}...`
     );
 
-    // Initial POST request to start the prediction
-    const initialResponse = await fetch(apiUrl, {
-      method: "POST",
+    // Initial POST request to start the generation
+    const generateResponse = await fetch(`${EAS_URL}/generate`, {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${REPLICATE_API_TOKEN}`,
+        "Authorization": `${EAS_TOKEN}`,
         "Content-Type": "application/json",
-        // Prefer: "wait", // Remove Prefer: wait, we will poll
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        prompt,
+        seed: 42,
+        neg_prompt: "low quality, blurry",
+        infer_steps: 50,
+        cfg_scale: 7.5,
+        height: 720,
+        width: 1280
+      }),
     });
 
     console.log(
-      `Initial response status for video ${index}: ${initialResponse.status}`
+      `Initial response status for video ${index}: ${generateResponse.status}`
     );
 
-    if (!initialResponse.ok) {
-      const errorBody = await initialResponse.text();
+    if (!generateResponse.ok) {
+      const errorBody = await generateResponse.text();
       console.error(
         `Initial error response body for video ${index}:`,
         errorBody
       );
       throw new Error(
-        `Replicate API request failed with status ${initialResponse.status}: ${errorBody}`
+        `Alibaba API request failed with status ${generateResponse.status}: ${errorBody}`
       );
     }
 
-    const initialPrediction = await initialResponse.json();
-    console.log(
-      `Initial prediction response for video ${index}:`,
-      JSON.stringify(initialPrediction, null, 2)
-    );
+    const generateResult = await generateResponse.json() as GenerateResponse;
+    const taskId = generateResult.task_id;
+    console.log(`Task ID for video ${index}: ${taskId}`);
 
-    // Check if prediction started successfully and we have a GET URL
-    if (!initialPrediction.urls || !initialPrediction.urls.get) {
-      throw new Error(
-        `Failed to get polling URL from initial response: ${JSON.stringify(
-          initialPrediction
-        )}`
-      );
-    }
+    // Poll for task status
+    let currentStatus: TaskStatus | null = null;
+    const maxAttempts = 30;
+    const pollInterval = 30000; // 30 seconds
 
-    // Poll the prediction status
-    const finalPrediction = await pollPrediction(
-      initialPrediction.urls.get,
-      REPLICATE_API_TOKEN
-    );
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      console.log(`Polling attempt ${attempt + 1}/${maxAttempts} for video ${index}`);
 
-    console.log(
-      `Final prediction response for video ${index}:`,
-      JSON.stringify(finalPrediction, null, 2)
-    );
+      const statusCheckResponse = await fetch(`${EAS_URL}/tasks/${taskId}/status`, {
+        method: 'GET',
+        headers: {
+          "Authorization": `${EAS_TOKEN}`
+        }
+      });
 
-    // 1. Check for explicit failure in the final prediction
-    if (
-      finalPrediction.status === "failed" ||
-      finalPrediction.status === "canceled"
-    ) {
-      const errorMessage = finalPrediction.error || "Unknown error";
-      console.error(
-        `Replicate prediction failed for video ${index}:`,
-        errorMessage
-      );
-      throw new Error(`Replicate prediction failed: ${errorMessage}`);
-    }
-
-    // 2. Check for the output URL in the final prediction
-    let outputUrl: string | null = null;
-    if (finalPrediction.output) {
-      if (
-        typeof finalPrediction.output === "string" &&
-        finalPrediction.output.startsWith("http")
-      ) {
-        outputUrl = finalPrediction.output;
-      } else if (
-        Array.isArray(finalPrediction.output) &&
-        finalPrediction.output.length > 0 &&
-        typeof finalPrediction.output[0] === "string" &&
-        finalPrediction.output[0].startsWith("http")
-      ) {
-        outputUrl = finalPrediction.output[0];
+      if (!statusCheckResponse.ok) {
+        const errorBody = await statusCheckResponse.text();
+        throw new Error(`Failed to get task status: ${statusCheckResponse.status} ${errorBody}`);
       }
+
+      const statusResult = await statusCheckResponse.json() as StatusResponse;
+      currentStatus = statusResult.status;
+
+      console.log(`Current status for video ${index}: ${currentStatus}`);
+
+      if (currentStatus === TaskStatus.COMPLETED) {
+        console.log(`Video ${index} ready!`);
+        break;
+      } else if (currentStatus === TaskStatus.FAILED) {
+        throw new Error(`Task failed for video ${index}: ${statusResult.error || 'Unknown error'}`);
+      }
+
+      // Wait before checking again
+      await new Promise((resolve) => setTimeout(resolve, pollInterval));
     }
 
-    // 3. If URL found, return it
-    if (outputUrl) {
-      console.log(
-        `Video ${index} URL: ${outputUrl} (Status: ${finalPrediction.status})`
-      );
-      return outputUrl;
+    if (currentStatus !== TaskStatus.COMPLETED) {
+      throw new Error(`Video generation timed out after ${maxAttempts} attempts.`);
     }
 
-    // 4. If status is succeeded but no valid URL, throw error
-    throw new Error(
-      `Prediction succeeded but no valid output URL found for video ${index}. Status: ${
-        finalPrediction.status
-      }. Response: ${JSON.stringify(finalPrediction)}`
-    );
+    // Get video URL
+    console.log(`Getting video URL for ${index}...`);
+    const videoUrl = `${EAS_URL}/tasks/${taskId}/video`;
+
+    // Validate the URL
+    try {
+      // Test if the URL is accessible
+      const testVideoResponse = await fetch(videoUrl, {
+        method: 'HEAD',
+        headers: {
+          "Authorization": `${EAS_TOKEN}`
+        }
+      });
+
+      if (!testVideoResponse.ok) {
+        throw new Error(`Failed to access video URL: ${testVideoResponse.status} ${testVideoResponse.statusText}`);
+      }
+    } catch (error) {
+      console.error(`Error validating video URL: ${error}`);
+      throw new Error(`Failed to validate video URL: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    if (!videoUrl) {
+      throw new Error(`No video URL found in response for video ${index}`);
+    }
+
+    console.log(`Video ${index} URL: ${videoUrl}`);
+    return videoUrl;
+
   } catch (error) {
     console.error(`Error generating video ${index}:`, error);
     if (error instanceof Error) {
