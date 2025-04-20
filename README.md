@@ -19,7 +19,7 @@ StorySpinner is an innovative app that transforms simple story prompts into full
 - **Frontend**: Next.js 15, React 19, Tailwind CSS
 - **AI Services**:
   - Text Generation: Alibaba Cloud Qwen Plus LLM
-  - Video Generation: WanSpeedAI model
+  - Video Generation: Alibaba Cloud EAS (Wan AI model)
   - Voice Synthesis: Eleven Labs API
 - **State Management**: Zustand
 - **Styling**: Tailwind CSS with shadcn/ui components
@@ -52,7 +52,8 @@ StorySpinner is an innovative app that transforms simple story prompts into full
 
    ```
    QWEN_API_KEY=your_alibaba_cloud_qwen_api_key
-   REPLICATE_API_TOKEN=your_replicate_api_token
+   EAS_URL=your_alibaba_eas_url
+   EAS_TOKEN=your_alibaba_eas_token
    ELEVENLABS_API_KEY=your_elevenlabs_api_key
    ```
 
